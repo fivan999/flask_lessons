@@ -47,5 +47,12 @@ def promotion_image() -> str:
     return render_template('promotion_image.html', image=img, styles=styles)
 
 
+@app.route('/astronaut selection/', methods=['POST', 'GET'])
+def astronaut_form() -> str:
+    """форма астронавту"""
+    styles = url_for('static', filename='css/astronaut_form.css')
+    return render_template('astronaut_form.html', styles=styles)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
