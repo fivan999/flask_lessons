@@ -35,7 +35,7 @@ def image_mars():
     return render_template('image_mars.html', image=img)
 
 
-@app.route('/image_mars/promotion_image/')
+@app.route('/promotion_image/')
 def promotion_image():
     img = url_for('static', filename='img/image_mars.jpg')
     styles = url_for('static', filename='css/styles.css')
