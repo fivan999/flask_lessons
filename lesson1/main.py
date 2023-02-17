@@ -55,9 +55,20 @@ def astronaut_form() -> str:
 
 
 @app.route('/choice/<planet_name>/')
-def propose_planet(planet_name) -> str:
+def propose_planet(planet_name: str) -> str:
     """страница с предложением планеты"""
     return render_template('planet_proposal.html', planet=planet_name)
+
+
+@app.route('/results/<nickname>/<int:level>/<float:rating>/')
+def person_result(nickname: str, level: int, rating: float) -> str:
+    """страница с результатом отбора"""
+    return render_template(
+        'person_result.html',
+        nickname=nickname,
+        level=level,
+        rating=rating
+    )
 
 
 if __name__ == '__main__':
