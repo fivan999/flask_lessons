@@ -93,5 +93,14 @@ def load_photo() -> str:
             return "<h1>Не успех!</h1>"
 
 
+@app.route('/carousel/')
+def mars_landscapes() -> str:
+    """страница с каруселью из пейзажев Марса"""
+    styles = url_for('static', filename='css/carousel.css')
+    images = ['img/image_mars.jpg', 'img/landscape3.jpg', 'img/landscape2.jpg']
+    images_url = [url_for('static', filename=image) for image in images]
+    return render_template('carousel.html', styles=styles, images=images_url)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
