@@ -54,5 +54,11 @@ def astronaut_form() -> str:
     return render_template('astronaut_form.html', styles=styles)
 
 
+@app.route('/choice/<planet_name>/')
+def propose_planet(planet_name) -> str:
+    """страница с предложением планеты"""
+    return render_template('planet_proposal.html', planet=planet_name)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
