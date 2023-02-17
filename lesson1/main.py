@@ -1,7 +1,8 @@
 from flask import (
     Flask,
     url_for,
-    render_template
+    render_template,
+    request
 )
 
 
@@ -69,6 +70,27 @@ def person_result(nickname: str, level: int, rating: float) -> str:
         level=level,
         rating=rating
     )
+
+
+@app.route('/load_photo/', methods=['POST', 'GET'])
+def load_photo() -> str:
+    """страница с загрузкой фото"""
+    if request.method == 'GET':
+        img = url_for('static', filename='img/user_photo.png')
+        styles = url_for('static', filename='css/load_photo.css')
+        return render_template('load_photo.html', image=img, styles=styles)
+    else:
+        photo = request.files['photo']
+        if photo and photo.filename[photo.filename.find('.') + 1:] in (
+            'png',
+            'jpg',
+            'jpeg'
+        ):
+            with open('static/img/user_photo.png', 'wb') as file:
+                file.write(photo.read())
+            return "<h1>Успех!</h1>"
+        else:
+            return "<h1>Не успех!</h1>"
 
 
 if __name__ == '__main__':
