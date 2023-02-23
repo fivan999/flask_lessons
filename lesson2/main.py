@@ -99,6 +99,7 @@ def mars_landscapes() -> str:
 
 @app.route('/training/<prof>/')
 def training(prof: str) -> str:
+    """тип тренировки"""
     prof = prof.lower()
     param = dict()
     if 'инженер' in prof or 'строитель' in prof:
@@ -116,6 +117,7 @@ def training(prof: str) -> str:
 
 @app.route('/list_prof/<list_type>/')
 def list_prof(list_type: str) -> str:
+    """список профессий"""
     param = dict()
     param['list_type'] = list_type
     param['professions'] = [
@@ -131,7 +133,8 @@ def list_prof(list_type: str) -> str:
 
 @app.route('/answer/')
 @app.route('/auto_answer/')
-def answer():
+def answer() -> str:
+    """информация из анкеты"""
     param = dict()
     param['surname'] = 'Wathy'
     param['name'] = 'Bob'
@@ -141,7 +144,7 @@ def answer():
     param['motivation'] = 'Захотел'
     param['ready'] = 'True'
     param['styles'] = url_for('static', filename='css/answer.css')
-    return render_template('answer.html', **param)
+    return render_template('auto_answer.html', **param)
 
 
 if __name__ == '__main__':
