@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Список профессий</h2>
+{% if list_type == 'ul' %}
+<ul>
+{% else %}
+<ol>
+{% endif %}
+
+{% for item in professions %}
+<li>{{ item }}</li>
+{% endfor %}
+
+{% if list_type == 'ul' %}
+</ul>
+{% else %}
+</ol>
+{% endif %}
+
+
+{% endblock %}

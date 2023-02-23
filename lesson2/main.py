@@ -114,5 +114,20 @@ def training(prof: str) -> str:
     return render_template('training.html', **param)
 
 
+@app.route('/list_prof/<list_type>/')
+def list_prof(list_type: str) -> str:
+    param = dict()
+    param['list_type'] = list_type
+    param['professions'] = [
+        'Гений',
+        'Умник',
+        'Инженер',
+        'Повар',
+        'Доктор',
+        'Строитель'
+    ]
+    return render_template('professions.html', **param)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
