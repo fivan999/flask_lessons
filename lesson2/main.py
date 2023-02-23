@@ -97,5 +97,22 @@ def mars_landscapes() -> str:
     return render_template('carousel.html', styles=styles, images=images_url)
 
 
+@app.route('/training/<prof>/')
+def training(prof: str) -> str:
+    prof = prof.lower()
+    param = dict()
+    if 'инженер' in prof or 'строитель' in prof:
+        param['train_name'] = 'Научные симуляторы'
+        param['train_img'] = url_for(
+            'static', filename='img/science_training.jpg'
+        )
+    else:
+        param['train_name'] = 'Другие'
+        param['train_img'] = url_for(
+            'static', filename='img/other_training.jpg'
+        )
+    return render_template('training.html', **param)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
