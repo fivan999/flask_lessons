@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block extra_styles %}
+
+<link rel="stylesheet" href="{{ styles }}">
+
+{% endblock %}
+
+{% block content %}
+
+Фамилия: {{ surname }}<br>
+Имя: {{ name }}<br>
+Образование: {{ education }}<br>
+Профессия: {{ profession }}<br>
+Пол: {{ sex }}<br>
+Мотивация: {{ motivation }}<br>
+Готовы остаться на Марсе? {{ ready }}<br>
+
+{% endblock %}

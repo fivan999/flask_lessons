@@ -129,5 +129,20 @@ def list_prof(list_type: str) -> str:
     return render_template('professions.html', **param)
 
 
+@app.route('/answer/')
+@app.route('/auto_answer/')
+def answer():
+    param = dict()
+    param['surname'] = 'Wathy'
+    param['name'] = 'Bob'
+    param['education'] = 'Среднее общее'
+    param['profession'] = 'Марсоходист'
+    param['sex'] = 'male'
+    param['motivation'] = 'Захотел'
+    param['ready'] = 'True'
+    param['styles'] = url_for('static', filename='css/answer.css')
+    return render_template('answer.html', **param)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
