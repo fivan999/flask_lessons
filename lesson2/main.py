@@ -2,11 +2,16 @@ from flask import (
     Flask,
     url_for,
     render_template,
-    request
+    request,
+    redirect
 )
+
+from forms import EmergencyAccessForm
 
 
 app = Flask(__name__)
+
+app.config['SECRET_KEY'] = 'yandexlyceum_secret_key'
 
 
 @app.route('/')
@@ -145,6 +150,15 @@ def answer() -> str:
     param['ready'] = 'True'
     param['styles'] = url_for('static', filename='css/answer.css')
     return render_template('auto_answer.html', **param)
+
+
+@app.route('/login/', methods=['GET', 'POST'])
+def emergency_access() -> None:
+    """доступ"""
+    form = EmergencyAccessForm()
+    if form.validate_on_submit():
+        return redirect('/')
+    return render_template('emergency_access.html', form=form)
 
 
 if __name__ == '__main__':
