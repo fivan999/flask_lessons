@@ -1,3 +1,5 @@
+import os
+
 from typing import Union
 
 from flask import (
@@ -96,13 +98,28 @@ def load_photo() -> str:
             return "<h1>Не успех!</h1>"
 
 
-@app.route('/carousel/')
-def mars_landscapes() -> str:
+@app.route('/galery/', methods=['GET', 'POST'])
+def galery() -> str:
     """страница с каруселью из пейзажев Марса"""
+    if request.method == 'POST':
+        photo = request.files['photo']
+        if photo and photo.filename[photo.filename.find('.') + 1:] in (
+            'png',
+            'jpg',
+            'jpeg'
+        ):
+            print(f'static/img/galery/{photo.filename}')
+            with open(f'static/img/galery/{photo.filename}', 'wb') as file:
+                file.write(photo.read())
     styles = url_for('static', filename='css/carousel.css')
-    images = ['img/image_mars.jpg', 'img/landscape3.jpg', 'img/landscape2.jpg']
-    images_url = [url_for('static', filename=image) for image in images]
-    return render_template('carousel.html', styles=styles, images=images_url)
+    images_url = [
+        [
+            url_for(
+                'static', filename='img/galery/' + image
+            ) for image in images
+        ] for _, _, images in os.walk('static/img/galery')
+    ]
+    return render_template('galery.html', styles=styles, images=images_url[0])
 
 
 @app.route('/training/<prof>/')
