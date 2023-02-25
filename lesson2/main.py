@@ -1,9 +1,12 @@
+from typing import Union
+
 from flask import (
     Flask,
     url_for,
     render_template,
     request,
-    redirect
+    redirect,
+    Response
 )
 
 from forms import EmergencyAccessForm
@@ -153,7 +156,7 @@ def answer() -> str:
 
 
 @app.route('/login/', methods=['GET', 'POST'])
-def emergency_access() -> None:
+def emergency_access() -> str:
     """доступ"""
     form = EmergencyAccessForm()
     if form.validate_on_submit():
@@ -162,10 +165,35 @@ def emergency_access() -> None:
 
 
 @app.route('/distribution/')
-def distribution():
+def distribution() -> str:
+    """размешение по каютам"""
     param = dict()
     param['people'] = ['Гений Генич', 'Евген', 'Олег', 'Стас Борецкий']
     return render_template('people_distribution.html', **param)
+
+
+@app.route('/table/<sex>/<int:age>/')
+def room(sex: str, age: int) -> Union[str, Response]:
+    """каюта"""
+    param = dict()
+    if sex == 'male':
+        if age < 21:
+            param['color'] = 'rgb(0, 217, 255)'
+            param['image'] = url_for('static', filename='img/little_guy.jpg')
+        else:
+            param['color'] = 'rgb(25, 0, 255)'
+            param['image'] = url_for('static', filename='img/big_guy.jpg')
+    else:
+        if age < 21:
+            param['color'] = 'rgb(251, 255, 0)'
+            param['image'] = url_for('static', filename='img/little_guy.jpg')
+        else:
+            param['color'] = 'rgb(255, 153, 0)'
+            param['image'] = url_for('static', filename='img/big_guy.jpg')
+    if sex in ('male', 'female'):
+        return render_template('room.html', **param)
+    else:
+        return Response(status=404)
 
 
 if __name__ == '__main__':
