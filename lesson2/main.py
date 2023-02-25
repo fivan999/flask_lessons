@@ -161,5 +161,12 @@ def emergency_access() -> None:
     return render_template('emergency_access.html', form=form)
 
 
+@app.route('/distribution/')
+def distribution():
+    param = dict()
+    param['people'] = ['Гений Генич', 'Евген', 'Олег', 'Стас Борецкий']
+    return render_template('people_distribution.html', **param)
+
+
 if __name__ == '__main__':
     app.run(port=8080, host='127.0.0.1')
