@@ -1,0 +1,12 @@
+[
+    {
+        "name": "Олег",
+        "image": "/static/img/big_guy.jpg",
+        "professions": ["гений", "умник", "инженер"]
+    },
+    {
+        "name": "Стас Барецкий",
+        "image": "/static/img/стас.jpeg",
+        "professions": ["стас", "марсоходист", "строитель"]
+    }
+]

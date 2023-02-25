@@ -1,4 +1,5 @@
 import os
+import json
 
 from typing import Union
 
@@ -211,6 +212,14 @@ def room(sex: str, age: int) -> Union[str, Response]:
         return render_template('room.html', **param)
     else:
         return Response(status=404)
+
+
+@app.route('/member/')
+def member() -> str:
+    """участник экспедиции"""
+    with open('templates/crew.json', encoding='utf-8') as file:
+        crew = json.load(file)
+    return render_template('member.html', crew=crew)
 
 
 if __name__ == '__main__':
