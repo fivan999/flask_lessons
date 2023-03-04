@@ -15,7 +15,7 @@ from flask import (
 from data import db_session
 from data.users import User
 from data.jobs import Jobs
-from forms import EmergencyAccessForm
+from forms import EmergencyAccessForm, RegisterForm
 
 
 app = Flask(__name__)
@@ -245,6 +245,39 @@ def jobs() -> str:
         Jobs.id
     ).filter(User.id == Jobs.team_leader)
     return render_template('jobs.html', jobs=jobs)
+
+
+@app.route('/register/', methods=['GET', 'POST'])
+def register() -> str:
+    """регистрация"""
+    form = RegisterForm()
+    if request.method == 'POST':
+        if form.password.data != form.password_again.data:
+            return render_template(
+                'register.html',
+                form=form,
+                message='Пароли не совпадают'
+            )
+        db_sess = db_session.create_session()
+        if db_sess.query(User).filter(User.email == form.email.data).first():
+            return render_template(
+                'register.html',
+                form=form,
+                message='Такой пользователь уже есть'
+            )
+        user = User(
+            name=form.name.data,
+            email=form.email.data,
+            surname=form.surname.data,
+            position=form.position.data,
+            speciality=form.speciality.data,
+            address=form.address.data
+        )
+        user.set_password(form.password.data)
+        db_sess.add(user)
+        db_sess.commit()
+        return redirect('/login/')
+    return render_template('register.html', form=form)
 
 
 if __name__ == '__main__':
