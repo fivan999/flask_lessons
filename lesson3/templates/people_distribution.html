@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; flex-direction: column; align-items: center;">
+<h2>Размещение по каютам</h2>
+{% for person in people %}
+
+{{ person }} - Каюта №{{ loop.index }}{% if loop.index == 1 %} - капитан корабля{% endif %}<br>
+
+{% endfor %}
+</div>
+{% endblock %}

@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+
+{% set person = crew|random %}
+
+<div style="display: flex; flex-direction: column; align-items: center;">
+    <h2>{{ person['name'] }}</h2>
+    <img src="{{ person['image'] }}" style="max-width: 300px; max-height: 600px;">
+    <p>
+        {% for item in person['professions']|sort %}
+        {{ item }}{% if loop.last != True %}, {% endif %}
+        {% endfor %}
+    </p>
+</div>
+
+{% endblock %}
