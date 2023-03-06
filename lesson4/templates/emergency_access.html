@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block extra_styles %}
+
+<link rel="stylesheet" href="/static/css/emergency.css"
+
+{% endblock %}
+
+{% block content %}
+    <h1 class="emblema">Аварийный доступ</h1>
+    <form action="" method="post" novalidate>
+        {{ form.csrf_token }}
+        <p>
+            {{ form.astronaut_id.label }}<br>
+            {{ form.astronaut_id(class="form-control") }}<br>
+        </p>
+        <p>
+            {{ form.astronaut_password.label }}<br>
+            {{ form.astronaut_password(class="form-control") }}<br>
+        </p>
+        <p>
+            {{ form.capitan_id.label }}<br>
+            {{ form.capitan_id(class="form-control") }}<br>
+        </p>
+        <p>
+            {{ form.capitan_password.label }}<br>
+            {{ form.capitan_password(class="form-control") }}<br>
+        </p>
+        <p>{{ form.submit(type="submit", class="btn btn-primary") }}</p>
+    </form>
+
+{% endblock %}
