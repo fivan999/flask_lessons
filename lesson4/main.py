@@ -11,7 +11,7 @@ from flask import (
     redirect,
     Response
 )
-from flask_login import LoginManager, login_user
+from flask_login import LoginManager, login_user, logout_user, login_required
 
 from data import db_session
 from data.users import User
@@ -265,7 +265,7 @@ def jobs() -> str:
 def register() -> str:
     """регистрация"""
     form = RegisterForm()
-    if request.method == 'POST':
+    if form.validate_on_submit():
         if form.password.data != form.password_again.data:
             return render_template(
                 'register.html',
@@ -327,6 +327,14 @@ def add_job() -> str:
         db_sess.commit()
         return redirect('/jobs/')
     return render_template('add_job.html', form=form)
+
+
+@app.route('/logout/')
+@login_required
+def logout():
+    """выход из системы"""
+    logout_user()
+    return redirect('/')
 
 
 if __name__ == '__main__':
