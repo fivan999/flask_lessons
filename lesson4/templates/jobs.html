@@ -1,29 +1,35 @@
 {% extends 'base.html' %}
 
-
 {% block content %}
   <h2 class="text-center">Works log</h2>
+  <a class="btn btn-primary" href="/jobs/add/">Add job</a>
   {% for item in jobs %}
-  <h3>Action #{{ item.id }}</h2>
-  <table class="table">
-    <thead>
-      <tr>
-        <th scope="col">Title of activity</th>
-        <th scope="col">Team leader</th>
-        <th scope="col">Duration</th>
-        <th scope="col">List of collaborators</th>
-        <th scope="col">Is finished</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td>{{ item.job }}</td>
-        <td>{{ item.surname }} {{ item.name }}</td>
-        <td>{{ item.work_size }} hours</td>
-        <td>{{ item.collaborators }}</td>
-        <td>{% if item.is_finished %}YES{% else %}NO{%endif%}</td>
-      </tr>
-    </tbody>
-  </table>
+    <h3>Action #{{ item.id }}</h2>
+    <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Title of activity</th>
+          <th scope="col">Team leader</th>
+          <th scope="col">Duration</th>
+          <th scope="col">List of collaborators</th>
+          <th scope="col">Is finished</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ item.job }}</td>
+          <td>{{ item.surname }} {{ item.name }}</td>
+          <td>{{ item.work_size }} hours</td>
+          <td>{{ item.collaborators }}</td>
+          <td>{% if item.is_finished %}YES{% else %}NO{%endif%}</td>
+        </tr>
+      </tbody>
+    </table>
+    {% if user_id in [1, item.team_leader] %}
+      <div class="d-flex gap-2">
+        <a class="btn btn-warning" href="/jobs/edit/{{ item.id }}/">Edit job</a>
+        <a class="btn btn-danger" href="/jobs/delete/{{ item.id }}/">Delete job</a>
+      </div>
+    {% endif %}
   {% endfor %}
 {% endblock %}

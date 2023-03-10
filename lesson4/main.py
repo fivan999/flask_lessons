@@ -11,7 +11,13 @@ from flask import (
     redirect,
     Response
 )
-from flask_login import LoginManager, login_user, logout_user, login_required
+from flask_login import (
+    LoginManager,
+    login_user,
+    logout_user,
+    login_required,
+    current_user
+)
 
 from data import db_session
 from data.users import User
@@ -40,7 +46,9 @@ def main() -> None:
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()
-    return db_sess.query(User).get(user_id)
+    user = db_sess.query(User).filter(User.id == user_id).first()
+    db_sess.query(User).get(user_id)
+    return user
 
 
 @app.route('/')
@@ -248,17 +256,23 @@ def member() -> str:
 @app.route('/jobs/')
 def jobs() -> str:
     """работы"""
-    session = db_session.create_session()
-    jobs = session.query(
+    db_sess = db_session.create_session()
+    jobs = db_sess.query(
         User.surname,
         User.name,
         Jobs.job,
         Jobs.work_size,
         Jobs.collaborators,
         Jobs.is_finished,
-        Jobs.id
+        Jobs.id,
+        Jobs.team_leader
     ).filter(User.id == Jobs.team_leader)
-    return render_template('jobs.html', jobs=jobs)
+    db_sess.close()
+    try:
+        user_id = current_user.id
+    except AttributeError:
+        user_id = -1
+    return render_template('jobs.html', jobs=jobs, user_id=user_id)
 
 
 @app.route('/register/', methods=['GET', 'POST'])
@@ -290,6 +304,7 @@ def register() -> str:
         user.set_password(form.password.data)
         db_sess.add(user)
         db_sess.commit()
+        db_sess.close()
         return redirect('/login/')
     return render_template('register.html', form=form)
 
@@ -300,9 +315,12 @@ def login() -> str:
     form = LoginForm()
     if form.validate_on_submit():
         db_sess = db_session.create_session()
-        user = db_sess.query(User).filter(User.email == form.email.data).first()
+        user = db_sess.query(User).filter(
+            User.email == form.email.data
+        ).first()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
+            db_sess.close()
             return redirect('/jobs/')
         return render_template('login.html',
                                message='Неправильный логин или пароль',
@@ -310,7 +328,7 @@ def login() -> str:
     return render_template('login.html', form=form)
 
 
-@app.route('/add_job/', methods=['GET', 'POST'])
+@app.route('/jobs/add/', methods=['GET', 'POST'])
 def add_job() -> str:
     """добавление работы"""
     form = JobCreateForm()
@@ -325,8 +343,48 @@ def add_job() -> str:
         )
         db_sess.add(job)
         db_sess.commit()
+        db_sess.close()
         return redirect('/jobs/')
     return render_template('add_job.html', form=form)
+
+
+@app.route('/jobs/edit/<int:job_id>/', methods=['GET', 'POST'])
+@login_required
+def edit_job(job_id: int) -> Response:
+    """изменение работы"""
+    form = JobCreateForm()
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).filter(Jobs.id == job_id).first()
+    if form.validate_on_submit():
+        job.job = form.job.data
+        job.work_size = form.work_size.data
+        job.collaborators = form.collaborators.data
+        job.is_finished = form.is_finished.data
+        job.team_leader = form.team_leader.data
+        db_sess.commit()
+        db_sess.close()
+        return redirect('/jobs/')
+    if job:
+        if current_user.id in (1, job.team_leader):
+            return render_template('add_job.html', form=form)
+        return Response(status=403)
+    return Response(status=404)
+
+
+@app.route('/jobs/delete/<int:job_id>/', methods=['GET', 'POST'])
+@login_required
+def delete_job(job_id: int) -> Response:
+    """удаление работы"""
+    db_sess = db_session.create_session()
+    job = db_sess.query(Jobs).filter(Jobs.id == job_id)
+    if job.count():
+        if current_user.id in (1, job.first().team_leader):
+            job.delete()
+            db_sess.commit()
+            db_sess.close()
+            return redirect('/jobs/')
+        return Response(status=403)
+    return Response(status=404)
 
 
 @app.route('/logout/')
