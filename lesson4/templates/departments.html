@@ -1,0 +1,38 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h2 class="text-center">List of departments</h2>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="/jobs/">To jobs</a>
+    <a class="btn btn-primary" href="/departments/add/">Add department</a>
+  </div>
+  {% for item in departments %}
+    <div>
+      <h3>Department #{{ item.id }}</h2>
+      <table class="table">
+      <thead>
+        <tr>
+          <th scope="col">Title of department</th>
+          <th scope="col">Chief</th>
+          <th scope="col">Members</th>
+          <th scope="col">Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>{{ item.title }}</td>
+          <td>{{ item.surname }} {{ item.name }}</td>
+          <td>{{ item.members }}</td>
+          <td>{{ item.email }}</td>
+        </tr>
+      </tbody>
+      </table>
+      {% if user_id in [1, item.chief] %}
+        <div class="d-flex gap-2">
+          <a class="btn btn-warning" href="/departments/edit/{{ item.id }}/">Edit department</a>
+          <a class="btn btn-danger" href="/departments/delete/{{ item.id }}/">Delete department</a>
+        </div>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endblock %}

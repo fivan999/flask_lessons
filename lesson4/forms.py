@@ -46,8 +46,18 @@ class LoginForm(FlaskForm):
 
 class JobCreateForm(FlaskForm):
     job = StringField('Название работы', validators=[DataRequired()])
-    work_size = IntegerField('Длительность работы в часах', validators=[DataRequired()])
+    work_size = IntegerField(
+        'Длительность работы в часах', validators=[DataRequired()]
+    )
     collaborators = StringField('Коллабораторы', validators=[DataRequired()])
     is_finished = BooleanField('Закончена')
     team_leader = IntegerField('Глава', validators=[DataRequired()])
+    submit = SubmitField('Добавить')
+
+
+class DepartmentCreateForm(FlaskForm):
+    title = StringField('Название департамента', validators=[DataRequired()])
+    chief = IntegerField('Глава департамента', validators=[DataRequired()])
+    members = StringField('Участники', validators=[DataRequired()])
+    email = EmailField('Почта', validators=[DataRequired()])
     submit = SubmitField('Добавить')
