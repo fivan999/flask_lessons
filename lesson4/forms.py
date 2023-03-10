@@ -52,6 +52,7 @@ class JobCreateForm(FlaskForm):
     collaborators = StringField('Коллабораторы', validators=[DataRequired()])
     is_finished = BooleanField('Закончена')
     team_leader = IntegerField('Глава', validators=[DataRequired()])
+    category = IntegerField('Категория', validators=[DataRequired()])
     submit = SubmitField('Добавить')
 
 

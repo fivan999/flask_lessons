@@ -267,7 +267,8 @@ def jobs() -> str:
         Jobs.collaborators,
         Jobs.is_finished,
         Jobs.team_leader,
-        Jobs.id
+        Jobs.id,
+        Jobs.category_id
     ).filter(User.id == Jobs.team_leader)
     db_sess.close()
     try:
@@ -341,7 +342,8 @@ def add_job() -> str:
             work_size=form.work_size.data,
             collaborators=form.collaborators.data,
             is_finished=form.is_finished.data,
-            team_leader=form.team_leader.data
+            team_leader=form.team_leader.data,
+            category_id=form.category.data
         )
         db_sess.add(job)
         db_sess.commit()
@@ -363,6 +365,7 @@ def edit_job(job_id: int) -> Response:
         job.collaborators = form.collaborators.data
         job.is_finished = form.is_finished.data
         job.team_leader = form.team_leader.data
+        job.category_id = form.category.data
         db_sess.commit()
         db_sess.close()
         return redirect('/jobs/')
