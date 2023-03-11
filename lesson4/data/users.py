@@ -1,5 +1,6 @@
 import datetime
 import sqlalchemy
+from sqlalchemy_serializer import SerializerMixin
 
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_login import UserMixin
@@ -7,7 +8,7 @@ from flask_login import UserMixin
 from .db_session import SqlAlchemyBase
 
 
-class User(SqlAlchemyBase, UserMixin):
+class User(SqlAlchemyBase, UserMixin, SerializerMixin):
     """модель марсиане"""
 
     __tablename__ = 'users'
@@ -23,6 +24,7 @@ class User(SqlAlchemyBase, UserMixin):
     address = sqlalchemy.Column(sqlalchemy.String)
     email = sqlalchemy.Column(sqlalchemy.String, unique=True)
     hashed_password = sqlalchemy.Column(sqlalchemy.String)
+    city_from = sqlalchemy.Column(sqlalchemy.String)
     modified_date = sqlalchemy.Column(
         sqlalchemy.DateTime, default=datetime.datetime.now
     )

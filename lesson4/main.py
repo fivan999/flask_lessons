@@ -1,7 +1,10 @@
 ﻿import os
 import json
+import requests
 
-from typing import Union
+from typing import Union, Callable
+from transliterate import slugify
+from werkzeug.exceptions import NotFound
 
 from flask import (
     Flask,
@@ -9,7 +12,9 @@ from flask import (
     render_template,
     request,
     redirect,
-    Response
+    Response,
+    make_response,
+    jsonify
 )
 from flask_login import (
     LoginManager,
@@ -19,7 +24,7 @@ from flask_login import (
     current_user
 )
 
-from data import db_session
+from data import db_session, api
 from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
@@ -30,6 +35,7 @@ from forms import (
     JobCreateForm,
     DepartmentCreateForm
 )
+from support import get_place_map, get_place_toponym
 
 
 app = Flask(__name__)
@@ -42,7 +48,33 @@ login_manager.init_app(app)
 def main() -> None:
     """инициализация бд, запуск приложения"""
     db_session.global_init('db/mars_mission.sqlite3')
+    app.register_blueprint(api.blueprint)
     app.run(port=8080, host='127.0.0.1')
+
+
+def handle_api_errors(handler: Callable):
+    """декоратор для проверки функции на принадлежность к апи"""
+    def custom_handler(error: NotFound) -> Response:
+        """не хочу, чтобы все ошибки обрабатывались апи"""
+        if request.path.startswith('/api/'):
+            return handler(error)
+        else:
+            return Response(status=error.code)
+    return custom_handler
+
+
+@app.errorhandler(404)
+@handle_api_errors
+def not_found(error: NotFound) -> Response:
+    """ошибка 404"""
+    return make_response(jsonify({'error': 'Not found'}), 404)
+
+
+@app.errorhandler(400)
+@handle_api_errors
+def bad_request(error: NotFound) -> Response:
+    """ошибка 400"""
+    return make_response(jsonify({'error': 'Bad Request'}), 400)
 
 
 @login_manager.user_loader
@@ -476,9 +508,42 @@ def edit_departments(department_id: int) -> Response:
     return Response(status=404)
 
 
+@app.route('/users_show/<int:user_id>/')
+def users_show(user_id: int) -> Union[str, Response]:
+    """отображение города марсианина"""
+    response = requests.get(
+        f'http://127.0.0.1:8080/api/users/{user_id}/'
+        ).json()
+    if 'error' in response:
+        return Response(status=404)
+    user_name = f'{response["user"]["surname"]} {response["user"]["name"]}'
+    city_from = response['user']['city_from'].lower().strip()
+    slugified_name = ''.join(
+        [slugify(letter, language_code='ru') for letter in city_from]
+    )
+    filename = url_for('static', filename=f'img/cities/{slugified_name}.png')
+    try:
+        place_coords = get_place_toponym(
+            city_from
+        ).json()['response'][
+            'GeoObjectCollection'
+        ]['featureMember'][0]['GeoObject']['Point']['pos'].split()
+        static_maps_response = get_place_map(place_coords)
+        with open(filename.strip('/'), mode='wb') as img:
+            img.write(static_maps_response.content)
+    except Exception:
+        filename = url_for('static', filename='img/image_mars.jpg')
+    return render_template(
+        'user_show_city.html',
+        user_name=user_name,
+        image_src=filename,
+        city_from=city_from
+    )
+
+
 @app.route('/logout/')
 @login_required
-def logout():
+def logout() -> Response:
     """выход из системы"""
     logout_user()
     return redirect('/')
