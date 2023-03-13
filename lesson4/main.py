@@ -3,7 +3,6 @@ import json
 import requests
 
 from typing import Union, Callable
-from transliterate import slugify
 from werkzeug.exceptions import NotFound
 
 from flask import (
@@ -16,6 +15,7 @@ from flask import (
     make_response,
     jsonify
 )
+from flask_restful import reqparse, abort, Api, Resource
 from flask_login import (
     LoginManager,
     login_user,
@@ -40,6 +40,7 @@ from support import get_place_map, get_place_toponym
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
+api = Api(app)
 
 login_manager = LoginManager()
 login_manager.init_app(app)

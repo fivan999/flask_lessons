@@ -1,5 +1,6 @@
+import os
 from flask import Flask
-from data import db_session, jobs_api
+from data import db_session, api
 import shutil
 
 import unittest
@@ -16,9 +17,15 @@ class ApiJobTests(unittest.TestCase):
         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
         self.app = Flask(__name__)
         db_session.global_init('db/test_db.sqlite3')
-        self.app.register_blueprint(jobs_api.blueprint)
+        self.app.register_blueprint(api.blueprint)
         self.client = self.app.test_client()
         super().setUp()
+
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """удаляем бд после тестов"""
+        os.remove('db/test_db.sqlite3')
+        super().tearDownClass()
 
     def test_api_get_jobs_correct_context(self) -> None:
         """тестируем корректный контекст get_jobs"""
