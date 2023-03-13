@@ -21,11 +21,11 @@ class ApiJobTests(unittest.TestCase):
         self.client = self.app.test_client()
         super().setUp()
 
-    @classmethod
-    def tearDownClass(cls) -> None:
-        """удаляем бд после тестов"""
-        os.remove('db/test_db.sqlite3')
-        super().tearDownClass()
+    # @classmethod
+    # def tearDownClass(cls) -> None:
+    #     """удаляем бд после тестов"""
+    #     os.remove('db/test_db.sqlite3')
+    #     super().tearDownClass()
 
     def test_api_get_jobs_correct_context(self) -> None:
         """тестируем корректный контекст get_jobs"""
