@@ -21,11 +21,10 @@ class ApiJobTests(unittest.TestCase):
         self.client = self.app.test_client()
         super().setUp()
 
-    # @classmethod
-    # def tearDownClass(cls) -> None:
-    #     """удаляем бд после тестов"""
-    #     os.remove('db/test_db.sqlite3')
-    #     super().tearDownClass()
+    def tearDown(self):
+        """закрываем бд"""
+        os.remove('db/test_db.sqlite3')
+        super().tearDown()
 
     def test_api_get_jobs_correct_context(self) -> None:
         """тестируем корректный контекст get_jobs"""
@@ -116,7 +115,11 @@ class ApiJobTests(unittest.TestCase):
         else:
             self.assertIn(expected, response)
 
-    @parameterized.expand([(2,), (3,)])
+    @parameterized.expand(
+        [
+            (2,), (3,), (4,)
+        ]
+    )
     def test_api_delete_correct_job(self, job_id: int) -> None:
         """тестируем правильное удаление работы"""
         start_count = len(
