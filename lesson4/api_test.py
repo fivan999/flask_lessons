@@ -21,7 +21,7 @@ class ApiJobTests(unittest.TestCase):
         self.client = self.app.test_client()
         super().setUp()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """закрываем бд"""
         os.remove('db/test_db.sqlite3')
         super().tearDown()
@@ -193,17 +193,59 @@ class ApiJobTests(unittest.TestCase):
             self.assertIn(expected, response)
 
 
-# class ApiUserTest(unittest.TestCase):
-#     """тестируем апи юзера"""
-#
-#     def setUp(self) -> None:
-#         """подготовка к тестированию, создание тестовой бд"""
-#         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
-#         self.app = Flask(__name__)
-#         db_session.global_init('db/test_db.sqlite3')
-#         self.app.register_blueprint(api.blueprint)
-#         self.client = self.app.test_client()
-#         super().setUp()
+class ApiUserTest(unittest.TestCase):
+    """тестируем апи юзера"""
+
+    def setUp(self) -> None:
+        """подготовка к тестированию, создание тестовой бд"""
+        shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
+        self.app = Flask(__name__)
+        db_session.global_init('db/test_db.sqlite3')
+        self.app.register_blueprint(api.blueprint)
+        self.client = self.app.test_client()
+        super().setUp()
+
+    def tearDown(self) -> None:
+        """закрываем бд"""
+        os.remove('db/test_db.sqlite3')
+        super().tearDown()
+
+    def test_api_get_users_correct_context(self) -> None:
+        """тестируем корректный контекст получения пользователей"""
+        response = self.client.get('/api/v2/users/').json
+        self.assertIn('users', response)
+
+    @parameterized.expand(
+        [
+            [1, 200],
+            [2, 200],
+            [3, 200],
+            ['aboba', 404],
+            [999, 404],
+        ]
+    )
+    def test_api_get_exact_user_status_code(
+        self, test_case: Union[int, str], expected: int
+    ) -> None:
+        """тестируем статус код у получения пользователя"""
+        response = self.client.get(f'/api/v2/users/jobs/{test_case}/')
+        self.assertEqual(response.status_code, expected)
+
+    @parameterized.expand(
+        [
+            (2,), (3,), (1,)
+        ]
+    )
+    def test_api_delete_correct_user(self, job_id: int) -> None:
+        """тестируем правильное удаление пользователя"""
+        start_count = len(
+            self.client.get('/api/v2/users/').json['jobs']
+        )
+        self.client.delete(f'/api/jobs/{job_id}/')
+        end_count = len(
+            self.client.get('/api/jobs/').json['jobs']
+        )
+        self.assertEqual(start_count - 1, end_count)
 
 
 

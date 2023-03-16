@@ -39,6 +39,7 @@ def get_exact_job(job_id: int) -> Response:
     """одна работа"""
     db_sess = db_session.create_session()
     job = db_sess.query(Jobs).filter(Jobs.id == job_id)
+    db_sess.close()
     if job.count():
         job = job.first()
         return jsonify(
@@ -161,6 +162,7 @@ def get_exact_user(user_id: int) -> Response:
     """один пользователь"""
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == user_id)
+    db_sess.close()
     if user.count():
         user = user.first()
         return jsonify(

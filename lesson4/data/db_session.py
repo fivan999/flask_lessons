@@ -7,7 +7,7 @@ SqlAlchemyBase = sqlalchemy.orm.declarative_base()
 __factory = None
 
 
-def global_init(db_file):
+def global_init(db_file: str) -> None:
     global __factory
 
     if __factory:
