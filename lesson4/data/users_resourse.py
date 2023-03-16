@@ -9,9 +9,9 @@ from .parser import post_user_parser
 def abort_if_user_not_found(user_id: int) -> None:
     """проверка пользователя на существование"""
     db_sess = db_session.create_session()
-    news = db_sess.query(User).get(user_id)
+    user = db_sess.query(User).filter(User.id == user_id)
     db_sess.close()
-    if not news:
+    if user.count() == 0:
         abort(404, message=f'User {user_id} not found')
 
 
@@ -38,7 +38,7 @@ def abort_user_already_exists(email: str) -> None:
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.email == email)
     db_sess.close()
-    if user.count():
+    if user.count() > 0:
         abort(400, message='User already exists')
 
 
@@ -109,10 +109,9 @@ class UserResourse(Resource):
     def delete(self, user_id: int) -> Response:
         """удаляем одного пользователя"""
         abort_if_user_not_found(user_id)
-        session = db_session.create_session()
-        user = session.query(User).get(user_id)
-        session.delete(user)
-        session.commit()
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).get(user_id)
+        db_sess.delete(user)
+        db_sess.commit()
+        db_sess.close()
         return jsonify({'success': 'OK'})
-
-

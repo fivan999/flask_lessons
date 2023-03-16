@@ -2,8 +2,7 @@
 import json
 import requests
 
-from typing import Union, Callable
-from werkzeug.exceptions import NotFound
+from typing import Union
 
 from flask import (
     Flask,
@@ -11,11 +10,9 @@ from flask import (
     render_template,
     request,
     redirect,
-    Response,
-    make_response,
-    jsonify
+    Response
 )
-from flask_restful import reqparse, abort, Api, Resource
+from flask_restful import Api
 from flask_login import (
     LoginManager,
     login_user,
@@ -24,10 +21,11 @@ from flask_login import (
     current_user
 )
 
-from data import db_session, api
+from data import db_session, rest_api
 from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
+from data import users_resourse
 from forms import (
     EmergencyAccessForm,
     RegisterForm,
@@ -36,11 +34,17 @@ from forms import (
     DepartmentCreateForm
 )
 from support import get_place_map, get_place_toponym
+from transliterate import slugify
 
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
 api = Api(app)
+api.add_resource(users_resourse.UserListResourse, '/api/v2/users/')
+api.add_resource(
+    users_resourse.UserResourse, '/api/v2/users/<int:user_id>/'
+)
+
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -49,7 +53,7 @@ login_manager.init_app(app)
 def main() -> None:
     """инициализация бд, запуск приложения"""
     db_session.global_init('db/mars_mission.sqlite3')
-    app.register_blueprint(api.blueprint)
+    app.register_blueprint(rest_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
 
 
@@ -57,7 +61,7 @@ def main() -> None:
 def load_user(user_id):
     db_sess = db_session.create_session()
     user = db_sess.query(User).filter(User.id == user_id).first()
-    db_sess.query(User).get(user_id)
+    db_sess.close()
     return user
 
 
@@ -329,9 +333,9 @@ def login() -> str:
         user = db_sess.query(User).filter(
             User.email == form.email.data
         ).first()
+        db_sess.close()
         if user and user.check_password(form.password.data):
             login_user(user, remember=form.remember_me.data)
-            db_sess.close()
             return redirect('/jobs/')
         return render_template('login.html',
                                message='Неправильный логин или пароль',
@@ -377,6 +381,7 @@ def edit_job(job_id: int) -> Response:
         db_sess.commit()
         db_sess.close()
         return redirect('/jobs/')
+    db_sess.close()
     if job:
         if current_user.id in (1, job.team_leader):
             return render_template('add_job.html', form=form)
@@ -396,7 +401,9 @@ def delete_job(job_id: int) -> Response:
             db_sess.commit()
             db_sess.close()
             return redirect('/jobs/')
+        db_sess.close()
         return Response(status=403)
+    db_sess.close()
     return Response(status=404)
 
 
@@ -456,7 +463,9 @@ def delete_department(department_id: int) -> Response:
             db_sess.commit()
             db_sess.close()
             return redirect('/departments/')
+        db_sess.close()
         return Response(status=403)
+    db_sess.close()
     return Response(status=404)
 
 
@@ -477,6 +486,7 @@ def edit_departments(department_id: int) -> Response:
         db_sess.commit()
         db_sess.close()
         return redirect('/departments/')
+    db_sess.close()
     if department:
         if current_user.id in (1, department.chief):
             return render_template('add_department.html', form=form)

@@ -1,12 +1,14 @@
 import os
 from flask import Flask
-from data import db_session, api
+from data import db_session, rest_api, users_resourse
 import shutil
 
 import unittest
 
 from typing import Union
 from parameterized import parameterized
+from flask_restful import Api
+from data.users import User
 
 
 class ApiJobTests(unittest.TestCase):
@@ -17,7 +19,7 @@ class ApiJobTests(unittest.TestCase):
         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
         self.app = Flask(__name__)
         db_session.global_init('db/test_db.sqlite3')
-        self.app.register_blueprint(api.blueprint)
+        self.app.register_blueprint(rest_api.blueprint)
         self.client = self.app.test_client()
         super().setUp()
 
@@ -78,7 +80,7 @@ class ApiJobTests(unittest.TestCase):
             ],
             [
                 {
-                    'id': 2,  # не хватает category_id
+                    'id': 8,  # не хватает category_id
                     'job': 'a',
                     'work_size': 1,
                     'collaborators': '1, 2, 3',
@@ -201,7 +203,13 @@ class ApiUserTest(unittest.TestCase):
         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
         self.app = Flask(__name__)
         db_session.global_init('db/test_db.sqlite3')
-        self.app.register_blueprint(api.blueprint)
+        self.api = Api(self.app)
+        self.api.add_resource(
+            users_resourse.UserListResourse, '/api/v2/users/'
+        )
+        self.api.add_resource(
+            users_resourse.UserResourse, '/api/v2/users/<int:user_id>/'
+        )
         self.client = self.app.test_client()
         super().setUp()
 
@@ -227,8 +235,8 @@ class ApiUserTest(unittest.TestCase):
     def test_api_get_exact_user_status_code(
         self, test_case: Union[int, str], expected: int
     ) -> None:
-        """тестируем статус код у получения пользователя"""
-        response = self.client.get(f'/api/v2/users/jobs/{test_case}/')
+        """тестируем статус код получения пользователя"""
+        response = self.client.get(f'/api/v2/users/{test_case}/')
         self.assertEqual(response.status_code, expected)
 
     @parameterized.expand(
@@ -236,18 +244,86 @@ class ApiUserTest(unittest.TestCase):
             (2,), (3,), (1,)
         ]
     )
-    def test_api_delete_correct_user(self, job_id: int) -> None:
+    def test_api_delete_correct_user(self, user_id: int) -> None:
         """тестируем правильное удаление пользователя"""
         start_count = len(
-            self.client.get('/api/v2/users/').json['jobs']
+            self.client.get('/api/v2/users/').json['users']
         )
-        self.client.delete(f'/api/jobs/{job_id}/')
+        self.client.delete(f'/api/v2/users/{user_id}/')
         end_count = len(
-            self.client.get('/api/jobs/').json['jobs']
+            self.client.get('/api/v2/users/').json['users']
         )
         self.assertEqual(start_count - 1, end_count)
 
-
+    @parameterized.expand(
+        [
+            [
+                {
+                    'surname': 'ivan',  # не хватает city_from
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': '1',
+                    'email': 'aboba2@ya.ru',
+                    'password': 'aboba'
+                }
+            ],
+            [
+                {
+                    'surname': 'ivan',  # неправильный формат address
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': 1,
+                    'email': 'aboba@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                }
+            ],
+            [
+                {
+                    'surname': 'ivan',  # существующая почта
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': 'a',
+                    'email': 'aboba@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                }
+            ],
+            [
+                {
+                    'surname': 'ivan',  # все нормик
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': 'module 1',
+                    'email': 'aboba4@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                }
+            ],
+        ]
+    )
+    def test_api_create_user(self, request_json: dict) -> None:
+        """тестируем post запросы на создание user"""
+        response = self.client.post(
+            '/api/v2/users/', json=request_json
+        ).json
+        if 'success' in response:
+            db_sess = db_session.create_session()
+            user = db_sess.query(
+                User
+            ).filter(User.email == request_json['email'])
+            db_sess.close()
+            self.assertEqual(user.count(), 1)
+        else:
+            self.assertTrue('message' in response)
 
 
 if __name__ == '__main__':
