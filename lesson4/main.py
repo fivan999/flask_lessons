@@ -53,31 +53,6 @@ def main() -> None:
     app.run(port=8080, host='127.0.0.1')
 
 
-def handle_api_errors(handler: Callable):
-    """декоратор для проверки функции на принадлежность к апи"""
-    def custom_handler(error: NotFound) -> Response:
-        """не хочу, чтобы все ошибки обрабатывались апи"""
-        if request.path.startswith('/api/'):
-            return handler(error)
-        else:
-            return Response(status=error.code)
-    return custom_handler
-
-
-@app.errorhandler(404)
-@handle_api_errors
-def not_found(error: NotFound) -> Response:
-    """ошибка 404"""
-    return make_response(jsonify({'error': 'Not found'}), 404)
-
-
-@app.errorhandler(400)
-@handle_api_errors
-def bad_request(error: NotFound) -> Response:
-    """ошибка 400"""
-    return make_response(jsonify({'error': 'Bad Request'}), 400)
-
-
 @login_manager.user_loader
 def load_user(user_id):
     db_sess = db_session.create_session()

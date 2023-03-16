@@ -193,5 +193,20 @@ class ApiJobTests(unittest.TestCase):
             self.assertIn(expected, response)
 
 
+# class ApiUserTest(unittest.TestCase):
+#     """тестируем апи юзера"""
+#
+#     def setUp(self) -> None:
+#         """подготовка к тестированию, создание тестовой бд"""
+#         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
+#         self.app = Flask(__name__)
+#         db_session.global_init('db/test_db.sqlite3')
+#         self.app.register_blueprint(api.blueprint)
+#         self.client = self.app.test_client()
+#         super().setUp()
+
+
+
+
 if __name__ == '__main__':
     unittest.main()
