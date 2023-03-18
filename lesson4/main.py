@@ -21,11 +21,11 @@ from flask_login import (
     current_user
 )
 
-from data import db_session, rest_api
+from data import db_session
 from data.users import User
 from data.jobs import Jobs
 from data.departments import Department
-from data import users_resourse
+from data import users_resourse, jobs_resourse
 from forms import (
     EmergencyAccessForm,
     RegisterForm,
@@ -40,10 +40,12 @@ from transliterate import slugify
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'yandex_lyceum_secret_key'
 api = Api(app)
-api.add_resource(users_resourse.UserListResourse, '/api/v2/users/')
+api.add_resource(users_resourse.UserListResourse, '/api/users/')
 api.add_resource(
-    users_resourse.UserResourse, '/api/v2/users/<int:user_id>/'
+    users_resourse.UserResourse, '/api/users/<int:user_id>/'
 )
+api.add_resource(jobs_resourse.JobListResourse, '/api/jobs/')
+api.add_resource(jobs_resourse.JobResourse, '/api/jobs/<int:job_id>/')
 
 
 login_manager = LoginManager()
@@ -53,7 +55,6 @@ login_manager.init_app(app)
 def main() -> None:
     """инициализация бд, запуск приложения"""
     db_session.global_init('db/mars_mission.sqlite3')
-    app.register_blueprint(rest_api.blueprint)
     app.run(port=8080, host='127.0.0.1')
 
 

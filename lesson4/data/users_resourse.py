@@ -18,7 +18,7 @@ def abort_if_user_not_found(user_id: int) -> None:
 def abort_if_post_args_not_enought(post_args: dict) -> None:
     """проверямяем наличие всех аргументов при создании юзера"""
     if not all(
-        key in post_args for key in [
+        post_args[key] is not None for key in [
             'surname',
             'name',
             'age',
@@ -112,6 +112,27 @@ class UserResourse(Resource):
         db_sess = db_session.create_session()
         user = db_sess.query(User).get(user_id)
         db_sess.delete(user)
+        db_sess.commit()
+        db_sess.close()
+        return jsonify({'success': 'OK'})
+
+    def put(self, user_id: int) -> Resource:
+        """изменение юзера"""
+        abort_if_user_not_found(user_id)
+        args = post_user_parser.parse_args()
+        abort_if_post_args_not_enought(args)
+        abort_user_already_exists(args['email'])
+        db_sess = db_session.create_session()
+        user = db_sess.query(User).filter(User.id == user_id).first()
+        user.surname = args['surname']
+        user.name = args['name']
+        user.position = args['position']
+        user.speciality = args['speciality']
+        user.email = args['email']
+        user.city_from = args['city_from']
+        user.age = args['age']
+        user.address = args['address']
+        user.set_password(args['password'])
         db_sess.commit()
         db_sess.close()
         return jsonify({'success': 'OK'})

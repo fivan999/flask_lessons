@@ -1,6 +1,6 @@
 import os
 from flask import Flask
-from data import db_session, rest_api, users_resourse
+from data import db_session, users_resourse, jobs_resourse
 import shutil
 
 import unittest
@@ -12,14 +12,20 @@ from data.users import User
 
 
 class ApiJobTests(unittest.TestCase):
-    """тесты на работу api"""
+    """тесты на работу api jobs"""
 
     def setUp(self) -> None:
         """подготовка к тестированию, создание тестовой бд"""
         shutil.copyfile('db/mars_mission.sqlite3', 'db/test_db.sqlite3')
         self.app = Flask(__name__)
         db_session.global_init('db/test_db.sqlite3')
-        self.app.register_blueprint(rest_api.blueprint)
+        self.api = Api(self.app)
+        self.api.add_resource(
+            jobs_resourse.JobListResourse, '/api/jobs/'
+        )
+        self.api.add_resource(
+            jobs_resourse.JobResourse, '/api/jobs/<int:job_id>/'
+        )
         self.client = self.app.test_client()
         super().setUp()
 
@@ -39,7 +45,7 @@ class ApiJobTests(unittest.TestCase):
             [2, 200],
             [3, 200],
             ['aboba', 404],
-            [999, 200],
+            [999, 404],
         ]
     )
     def test_api_get_exact_job_status_code(
@@ -54,7 +60,7 @@ class ApiJobTests(unittest.TestCase):
             [2, 'job'],
             [3, 'job'],
             [1, 'job'],
-            [9999999, 'error'],
+            [9999999, 'message'],
         ]
     )
     def test_api_get_exact_job_correct_context(
@@ -76,7 +82,7 @@ class ApiJobTests(unittest.TestCase):
                     'team_leader': 1,
                     'category_id': 1
                 },
-                'error'
+                'message'
             ],
             [
                 {
@@ -87,10 +93,10 @@ class ApiJobTests(unittest.TestCase):
                     'is_finished': False,
                     'team_leader': 1,
                 },
-                'error'
+                'message'
             ],
             [
-                {}, 'error'  # пустой запрос
+                {}, 'message'  # пустой запрос
             ],
             [
                 {
@@ -111,33 +117,7 @@ class ApiJobTests(unittest.TestCase):
         response = self.client.post(
             '/api/jobs/', json=request_json
         ).json
-        if expected == 'success':
-            job = self.client.get(f'/api/jobs/{request_json["id"]}/').json
-            self.assertIn('job', job)
-        else:
-            self.assertIn(expected, response)
-
-    @parameterized.expand(
-        [
-            (2,), (3,), (4,)
-        ]
-    )
-    def test_api_delete_correct_job(self, job_id: int) -> None:
-        """тестируем правильное удаление работы"""
-        start_count = len(
-            self.client.get('/api/jobs/').json['jobs']
-        )
-        self.client.delete(f'/api/jobs/{job_id}/')
-        end_count = len(
-            self.client.get('/api/jobs/').json['jobs']
-        )
-        self.assertEqual(start_count - 1, end_count)
-
-    @parameterized.expand([(88,), (99999999,)])
-    def test_api_delete_incorrect_job(self, job_id: Union[int, str]) -> None:
-        """тестируем ошибку при удалении работы"""
-        response = self.client.delete(f'/api/jobs/{job_id}/').json
-        self.assertIn('error', response)
+        self.assertIn(expected, response)
 
     @parameterized.expand(
         [
@@ -151,7 +131,7 @@ class ApiJobTests(unittest.TestCase):
                     'team_leader': 1,
                     'category_id': 1
                 },
-                'error'
+                'message'
             ],
             [
                 2,  # не хватает category_id
@@ -162,13 +142,13 @@ class ApiJobTests(unittest.TestCase):
                     'is_finished': False,
                     'team_leader': 1,
                 },
-                'error'
+                'message'
             ],
             [
-                2, {}, 'error'  # пустой запрос
+                2, {}, 'message'  # пустой запрос
             ],
             [
-                1,
+                1,  # все ок
                 {
                     'job': 'a',
                     'work_size': 1,
@@ -188,11 +168,29 @@ class ApiJobTests(unittest.TestCase):
         response = self.client.put(
             f'/api/jobs/{job_id}/', json=request_json
         ).json
-        if expected == 'success':
-            job = self.client.get(f'/api/jobs/{job_id}/').json
-            self.assertIn('job', job)
-        else:
-            self.assertIn(expected, response)
+        self.assertIn(expected, response)
+
+    @parameterized.expand(
+        [
+            (2,), (3,), (1,)
+        ]
+    )
+    def test_api_delete_correct_job(self, job_id: int) -> None:
+        """тестируем правильное удаление работы"""
+        start_count = len(
+            self.client.get('/api/jobs/').json['jobs']
+        )
+        self.client.delete(f'/api/jobs/{job_id}/')
+        end_count = len(
+            self.client.get('/api/jobs/').json['jobs']
+        )
+        self.assertEqual(start_count - 1, end_count)
+
+    @parameterized.expand([(88,), (99999999,)])
+    def test_api_delete_incorrect_job(self, job_id: Union[int, str]) -> None:
+        """тестируем ошибку при удалении работы"""
+        response = self.client.delete(f'/api/jobs/{job_id}/').json
+        self.assertIn('message', response)
 
 
 class ApiUserTest(unittest.TestCase):
@@ -205,10 +203,10 @@ class ApiUserTest(unittest.TestCase):
         db_session.global_init('db/test_db.sqlite3')
         self.api = Api(self.app)
         self.api.add_resource(
-            users_resourse.UserListResourse, '/api/v2/users/'
+            users_resourse.UserListResourse, '/api/users/'
         )
         self.api.add_resource(
-            users_resourse.UserResourse, '/api/v2/users/<int:user_id>/'
+            users_resourse.UserResourse, '/api/users/<int:user_id>/'
         )
         self.client = self.app.test_client()
         super().setUp()
@@ -220,7 +218,7 @@ class ApiUserTest(unittest.TestCase):
 
     def test_api_get_users_correct_context(self) -> None:
         """тестируем корректный контекст получения пользователей"""
-        response = self.client.get('/api/v2/users/').json
+        response = self.client.get('/api/users/').json
         self.assertIn('users', response)
 
     @parameterized.expand(
@@ -236,7 +234,7 @@ class ApiUserTest(unittest.TestCase):
         self, test_case: Union[int, str], expected: int
     ) -> None:
         """тестируем статус код получения пользователя"""
-        response = self.client.get(f'/api/v2/users/{test_case}/')
+        response = self.client.get(f'/api/users/{test_case}/')
         self.assertEqual(response.status_code, expected)
 
     @parameterized.expand(
@@ -247,11 +245,11 @@ class ApiUserTest(unittest.TestCase):
     def test_api_delete_correct_user(self, user_id: int) -> None:
         """тестируем правильное удаление пользователя"""
         start_count = len(
-            self.client.get('/api/v2/users/').json['users']
+            self.client.get('/api/users/').json['users']
         )
-        self.client.delete(f'/api/v2/users/{user_id}/')
+        self.client.delete(f'/api/users/{user_id}/')
         end_count = len(
-            self.client.get('/api/v2/users/').json['users']
+            self.client.get('/api/users/').json['users']
         )
         self.assertEqual(start_count - 1, end_count)
 
@@ -267,7 +265,8 @@ class ApiUserTest(unittest.TestCase):
                     'address': '1',
                     'email': 'aboba2@ya.ru',
                     'password': 'aboba'
-                }
+                },
+                'message'
             ],
             [
                 {
@@ -280,7 +279,8 @@ class ApiUserTest(unittest.TestCase):
                     'email': 'aboba@ya.ru',
                     'password': 'aboba',
                     'city_from': 'moscow'
-                }
+                },
+                'message'
             ],
             [
                 {
@@ -293,7 +293,8 @@ class ApiUserTest(unittest.TestCase):
                     'email': 'aboba@ya.ru',
                     'password': 'aboba',
                     'city_from': 'moscow'
-                }
+                },
+                'message'
             ],
             [
                 {
@@ -306,24 +307,89 @@ class ApiUserTest(unittest.TestCase):
                     'email': 'aboba4@ya.ru',
                     'password': 'aboba',
                     'city_from': 'moscow'
-                }
+                },
+                'success'
             ],
         ]
     )
-    def test_api_create_user(self, request_json: dict) -> None:
+    def test_api_create_user(self, request_json: dict, expected: str) -> None:
         """тестируем post запросы на создание user"""
         response = self.client.post(
-            '/api/v2/users/', json=request_json
+            '/api/users/', json=request_json
         ).json
-        if 'success' in response:
-            db_sess = db_session.create_session()
-            user = db_sess.query(
-                User
-            ).filter(User.email == request_json['email'])
-            db_sess.close()
-            self.assertEqual(user.count(), 1)
-        else:
-            self.assertTrue('message' in response)
+        self.assertIn(expected, response)
+
+    @parameterized.expand(
+        [
+            [
+                1,
+                {
+                    'surname': 'ivan',  # все нормик
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': 'module 1',
+                    'email': 'aboba4@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                },
+                'success'
+            ],
+            [
+                1,
+                {
+                    'surname': 'ivan',  # существующая почта
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': 'a',
+                    'email': 'aboba@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                },
+                'message'
+            ],
+            [
+                9999,  # несуществующий id
+                {
+                    'surname': 'ivan',
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': '1',
+                    'email': 'aboba@ya.ru',
+                    'password': 'aboba',
+                    'city_from': 'moscow'
+                },
+                'message'
+            ],
+            [
+                1,
+                {
+                    'surname': 'ivan',  # не хватает city_from
+                    'name': 'ivan',
+                    'age': 1,
+                    'position': 'genius',
+                    'speciality': 'verb',
+                    'address': '1',
+                    'email': 'aboba@ya.ru',
+                    'password': 'aboba',
+                },
+                'message'
+            ],
+        ]
+    )
+    def test_api_edit_user(
+        self, user_id: int, request_json: dict, expected: str
+    ) -> None:
+        """тестируем put запросы на изменение user"""
+        response = self.client.put(
+            f'/api/users/{user_id}/', json=request_json
+        ).json
+        self.assertIn(expected, response)
 
 
 if __name__ == '__main__':
